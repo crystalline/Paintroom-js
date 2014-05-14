@@ -14,6 +14,83 @@ html, body {
     background-color: #f2ded0;
 }
 
+#pen_plate {
+    margin-left: 0px;
+    margin-right: 0px;
+    width: 160px;
+    height: 56px;
+}
+
+.quarterbutton {
+    width: 22px;
+    height: 22px;
+    background-color: #fa8e41;
+    float: left;
+    margin-top: 4px;
+    margin-left: 4px;
+    margin-right: 0px;
+    -moz-border-radius: 4px;
+    border-radius: 4px;
+}
+
+#sizeinc {
+    font-size: 16px;
+    font-weight: bold;
+    text-align: center;
+    cursor: pointer; cursor: hand;
+}
+
+#sizedec {
+    font-size: 16px;
+    font-weight: bold;
+    text-align: center;
+    cursor: pointer; cursor: hand;
+}
+
+#sizeinp {
+    width: 46px;
+    font-size: 16px;
+    margin-top: 4px;
+    margin-left: 4px;
+    margin-right: 0px;
+    text-align: center;
+    -moz-border-radius: 4px;
+    border-radius: 4px;
+    border: none;
+    border-width: 1px;
+    font-weight: bold;
+    /* background-color: #f2ded0; */
+}
+
+.halfbutton {
+    width: 22px;
+    height: 48px;
+    background-color: #fa8e41;
+    float: left;
+    margin-top: 4px;
+    margin-left: 4px;
+    margin-right: 0px;
+    -moz-border-radius: 4px;
+    border-radius: 4px;
+    font-size: 16px;
+    font-weight: bold;
+    text-align: center;
+    user-select: none;
+    cursor: pointer; cursor: hand;
+}
+
+.halfbutton:hover {
+    /* background-color: #ffbb8b; */
+    background-color: #FF6633;
+    box-shadow: 0 0 3px #ff6a00;
+}
+
+.quarterbutton:hover {
+    /* background-color: #ffbb8b; */
+    background-color: #FF6633;
+    box-shadow: 0 0 3px #ff6a00;
+}
+
 .button {
     width: 48px;
     height: 48px;
@@ -21,19 +98,21 @@ html, body {
     float: left;
     margin-top: 4px;
     margin-left: 4px;
-    margin-right: 4px;
+    margin-right: 0px;
     -moz-border-radius: 4px;
     border-radius: 4px;
+    user-select: none;
 }
 
 .button-selected {
     width: 48px;
     height: 52px;
     background-color: #ffbb8b;
+    /* background-color: #FF6633; */
     float: left;
     margin: 4px;
     margin-left: 4px;
-    margin-right: 4px;
+    margin-right: 0px;
     -moz-border-radius: 4px 4px 0px 0px;
     border-radius: 4px 4px 0px 0px;
     /* cursor: pointer; cursor: hand; */
@@ -41,11 +120,15 @@ html, body {
 
 .button:hover {
     cursor: pointer; cursor: hand;
-    background-color: #ffbb8b;
+    /* background-color: #ffbb8b; */
+    background-color: #FF6633;
+    box-shadow: 0 0 3px #ff6a00;
 }
 
 .button-selected:hover {
     cursor: pointer; cursor: hand;
+    background-color: #FF6633;
+    box-shadow: 0 0 3px #ff6a00;
     /* background-color: #ffbb8b; */
 }
 
@@ -55,12 +138,28 @@ html, body {
     top: 56px;
     /* display: none; */
     visibility: hidden;
-    width: 240px;
-    height: 240px;
+    /* width: 240px; */
+    /* height: 240px; */
     z-index: 10;
+    padding: 0px;
     background-color: #ffbb8b;
     -moz-border-radius: 4px;
     border-radius: 4px;
+}
+
+#pen_menu {
+    width: 160px;
+    height: 108px;
+}
+
+#color_menu {
+    width: 160px;
+    height: 160px;
+}
+
+#action_menu {
+    width: 160px;
+    height: 56px;
 }
 
 #color_b {
@@ -72,8 +171,8 @@ html, body {
     padding-right: 0;
     margin-left: auto;
     margin-right: auto;
-    margin-top: 10px;
-    margin-bottom: 10px;
+    /*margin-top: 10px;
+     margin-bottom: 10px; */
     display: block;
     cursor: crosshair;
 }
