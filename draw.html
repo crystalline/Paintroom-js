@@ -8,36 +8,48 @@
     </head>
     <body>
         <div id='tools'>
-            <div class='button' id='pen_b'>
+            <div class='button unselectable' id='pen_b'>
                 <img src='pen.png' style='padding:2px;'></img>
             </div>
-            <div class='button' id='color_b'>
+            <div class='button unselectable' id='color_b'>
                 <img src='color2.png' style='padding:2px;'></img>
             </div>
-            <div class='button' id='action_b'>
+            <div class='button unselectable' id='action_b'>
                 <img src='gear2.png' style='padding:2px;'></img>
             </div>
         </div>
         <div class='menu' id='pen_menu'>
-            <div class='button' id='pen_brush'>
+            <div class='button unselectable' id='pen_brush'>
                 <img src='brush2.png' style='padding:2px;' onclick='setTool("brush")'></img>
             </div>
-            <div class='button' id='pen_eraser'>
+            <div class='button unselectable' id='pen_eraser'>
                 <img src='eraser2.png' style='padding:2px;' onclick='setTool("eraser")'></img>
             </div>
-            <div class='button' id='pen_picker'>
+            <div class='button unselectable' id='pen_picker'>
                 <img src='color_picker2.png' style='padding:2px;' onclick='setTool("picker")'></img>
             </div>
             <div class='halfbutton unselectable' id='size1' onclick='setSize(2)'>
+            <svg xmlns="http://www.w3.org/2000/svg" class='halficon'>
+                <circle cx="10" cy="10" r="1" fill="black" />
+            </svg>
             2
             </div>
             <div class='halfbutton unselectable' id='size2' onclick='setSize(4)'>
+            <svg xmlns="http://www.w3.org/2000/svg" class='halficon'>
+                <circle cx="10" cy="10" r="2" fill="black" />
+            </svg>
             4
             </div>
             <div class='halfbutton unselectable' id='size3' onclick='setSize(8)'>
+            <svg xmlns="http://www.w3.org/2000/svg" class='halficon'>
+                <circle cx="10" cy="10" r="4" fill="black" />
+            </svg>
             8
             </div>
             <div class='halfbutton unselectable' id='size4' onclick='setSize(16)'>
+            <svg xmlns="http://www.w3.org/2000/svg" class='halficon'>
+                <circle cx="10" cy="10" r="8" fill="black" />
+            </svg>
             16
             </div>
             <div class='quarterbutton unselectable' id='sizedec' onclick='decSize()'>
@@ -48,7 +60,8 @@
             </div>
             <!-- <div class='halfhoriz'> -->
                 <!-- <form><input type='text'></input></form> -->
-                <input type='text' id='sizeinp' value='4' onchange='setSize(parseInt(this.value,10))'></input>
+                <input type='text' id='sizeinp' value='4'
+                 onchange='setSize(parseInt(this.value,10))'></input>
             <!-- </div> -->
         </div>
         <div class='menu' id='color_menu'>
@@ -59,9 +72,9 @@
                 <img src='link3.png' style='padding:2px;'></img>
             </div>
             <div class='button' id='save_action'>
-                <img src='download2.png' style='padding:2px;'></img>
+                <img src='download2.png' style='padding:2px; onclick='saveScreen()'></img>
             </div>
-            <div class='button' id='clear_action'>
+            <div class='button' id='clear_action' onclick='clearScreen()'>
                 <img src='cross.png' style='padding:2px;'></img>
             </div>
         </div>
@@ -92,7 +105,7 @@
             }
             return ((r << 16) | (g << 8) | b).toString(16);
         }
-        
+                       
         //Buttons and menus   
         buttonActive = {"pen_b":false, "color_b":false, "action_b":false};
         buttonMenus = {"pen_b":"pen_menu", "color_b":"color_menu", "action_b":"action_menu"};
@@ -138,9 +151,17 @@
         var toolType = "brush";
         var sizeInput = getbyid("sizeinp");
         
+        var prevColor = 'green'
+        
         sizeInput.value = toolSize;
         
         function setTool(type) {
+            if(type == "brush" && toolType != "brush") {
+                ctx.globalCompositeOperation = "source-over";
+            }
+            if(type == "eraser") {
+                ctx.globalCompositeOperation = "destination-out";
+            }
             toolType = type;
         }
         
@@ -275,6 +296,9 @@
         
         //Canvas and drawing
         
+        //Chrome fix to disable cursor change on dragging
+        document.onselectstart = function(){ return false; };
+        
         var px=false,py=false;
         var tools = getbyid("tools");
         var mouseDown = 0;
@@ -289,6 +313,16 @@
         document.body.appendChild(canvas);
        
         var ctx = canvas.getContext("2d");
+        ctx.globalCompositeOperation = 'source-over';
+        
+        function saveScreen() { downloadCanvas(canvas,"canvas.png"); }
+        
+        function clearScreen() {
+            if(confirm('Caution: you are going to erase entire painting canvas.\n                                Are you sure?')) { 
+                //ctx.fillStyle = "rgba(0,0,0,0)";
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+            }
+        }
         
         function applyColorPickerTool(ctx,x,y) {
             var p = ctx.getImageData(x, y, 1, 1).data;
@@ -306,6 +340,7 @@
                     redrawPicker();
                 }
             }
+            console.log(p);
             return hex;
         }
         
@@ -320,14 +355,19 @@
                 y = event.pageY - canvas.offsetTop;
             if(mouseDown) {
                 if(px && py) {
-                    if(toolType == "brush") {
+                    if(toolType == "brush" || toolType == "eraser") {
                         ctx.beginPath();
                         ctx.moveTo(px,py);
                         ctx.lineTo(x, y);
                         ctx.lineWidth = toolSize;
-                        ctx.strokeStyle = toolColor;
+                        if(toolType == "brush") {
+                            ctx.strokeStyle = toolColor;
+                        } else {
+                            ctx.strokeStyle = "rgba(0,0,0,255)";
+                        }
                         ctx.lineCap = 'round';
                         ctx.stroke();
+                        //alert(toolColor);
                     }
                     if(toolType == "picker") {
                         applyColorPickerTool(ctx,x,y);
@@ -342,10 +382,14 @@
             event = event || window.event;
             var x = event.pageX - canvas.offsetLeft,
                 y = event.pageY - canvas.offsetTop;
-            if(toolType == "brush") {
+            if(toolType == "brush" || toolType == "eraser") {
                 ctx.beginPath();
                 ctx.arc(x, y, toolSize/2, 0, 2 * Math.PI, false);
-                ctx.fillStyle = toolColor;
+                if(toolType == "brush") {
+                    ctx.fillStyle = toolColor;
+                } else {
+                    ctx.fillStyle = "rgba(0,0,0,255)";
+                }
                 ctx.fill();
             }
             if(toolType == "picker") {
