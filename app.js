@@ -26,7 +26,7 @@ function rgbToHex(r, g, b) {
 }
 
 //Network connection
-
+socket = io.connect("http://localhost:3000");
                
 //Buttons and menus   
 buttonActive = {"pen_b":false, "color_b":false, "action_b":false};
@@ -237,7 +237,9 @@ document.body.appendChild(canvas);
 var ctx = canvas.getContext("2d");
 ctx.globalCompositeOperation = 'source-over';
 
-function saveScreen() { downloadCanvas(canvas,"canvas.png"); }
+function saveScreen() {
+    window.location.href = canvas.toDataURL("image/png").replace("image/png", "image/octet-stream");
+}
 
 function clearScreen() {
     if(confirm('Caution: you are going to erase entire painting canvas.\n                                Are you sure?')) { 

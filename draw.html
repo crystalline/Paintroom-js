@@ -71,14 +71,15 @@
             <div class='button' id='link_action'>
                 <img src='link3.png' style='padding:2px;'></img>
             </div>
-            <div class='button' id='save_action'>
-                <img src='download2.png' style='padding:2px; onclick='saveScreen()'></img>
+            <div class='button' id='save_action' onclick='saveScreen()'>
+                <img src='download2.png' style='padding:2px;'></img>
             </div>
             <div class='button' id='clear_action' onclick='clearScreen()'>
                 <img src='cross.png' style='padding:2px;'></img>
             </div>
         </div>
         <script src='colors.js'></script>
+        <script src='socket.io.js'></script>
         <script src='app.js'></script>
     </body>
 </html>
