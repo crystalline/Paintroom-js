@@ -1,7 +1,8 @@
 //Canvas drawing application
 
 var MaxCanvasWidth = 2000,
-    MaxCanvasHeight = 1100;
+    MaxCanvasHeight = 1100,
+    socketServer = "http://127.0.0.1:3000";
 
 //Utility functions
 function getbyid(id) {
@@ -276,7 +277,7 @@ function initSocketCallbacks() {
 }
 
 if (myRoom) {
-    socket = io.connect("http://127.0.0.1:3000");
+    socket = io.connect(socketServer);
     
     initSocketCallbacks();
     
@@ -300,7 +301,7 @@ function syncCanvas(room) {
 
 function createRoom() {
     if (!socket) {
-        socket = io.connect("http://127.0.0.1:3000");
+        socket = io.connect(socketServer);
         initSocketCallbacks();
         //socket.emit("create", {pixels:ctx.getImageData(0, 0, canvas.width, canvas.height), width:canvas.width, height:canvas.height});
         socket.emit("create", {pixels:canvas.toDataURL(), width:canvas.width, height:canvas.height});
@@ -369,15 +370,17 @@ function applyColorPickerTool(ctx,x,y) {
 }
 
 function resizeCanvas() {
+    console.log("Resizing painting canvas");
 	var oldWidth = canvas.width;
 	var oldHeight = canvas.height;
 	var newWidth = window.innerWidth;
 	var newHeight = window.innerHeight - tools.offsetHeight;
 	
-	if(newHeight > oldHeight || newWidth > oldWidth) {
-	    var data = ctx.getImageData();
+	if((newHeight > oldHeight) || (newWidth > oldWidth)) {
+	    var data = ctx.getImageData(0,0, oldWidth, oldHeight);
 	    canvas.width = Math.min(MaxCanvasWidth, newWidth);
 	    canvas.height = Math.min(MaxCanvasHeight, newHeight);
+	    ctx = canvas.getContext("2d");
 	    ctx.putImageData(data,0,0);
 	}
 }

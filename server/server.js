@@ -37,17 +37,64 @@ var Room = function(width, height) {
     this.height = Math.min(MaxCanvasHeight, height);
     this.canvas = new Canvas(width, height);
     this.ctx = this.canvas.getContext("2d");
-   
+    
+    this.sizeMaxed = false;
+    
     Room.rooms[this.name] = this;
 };
 
 Room.rooms = {};
 Room.sockRoom = {};
 
+Room.prototype.resize = function(neww, newh) {
+    var w = this.width;
+    var h = this.height;
+    
+    if (w >= neww && h >= newh) {
+        return;
+    }
+    
+    var setw = Math.min(MaxCanvasWidth, Math.max(neww + 200, w));
+    var seth = Math.min(MaxCanvasHeight, Math.max(newh + 200, h));
+    
+    if( setw == MaxCanvasWidth && seth == MaxCanvasHeight ) {
+        this.sizeMaxed = true;
+    }
+    
+    console.log("resizing room canvas to w:"+setw+" h:"+seth);
+    
+    var data = this.ctx.getImageData(0, 0, w, h);
+    this.canvas.width = setw;
+    this.canvas.height = seth;
+    this.width = setw;
+    this.height = seth;
+    this.ctx = this.canvas.getContext("2d");
+    this.ctx.putImageData(data,0,0);
+};
+
 Room.prototype.replayEvent = function(ev) {
     ctx = this.ctx;
-
-    //console.log(ev);
+    
+    //Resize canvas if it's too small
+    
+    if (!this.sizeMaxed) {
+      
+        var wmax = 0, hmax = 0;
+        
+        if (ev.px && ev.py) {
+            wmax = Math.max(ev.px, ev.x);
+            hmax = Math.max(ev.py, ev.y);
+        } else {
+            wmax = ev.x;
+            hmax = ev.y;
+        }
+        
+        if ((wmax >= this.width) || (hmax >= this.height)) {
+            console.log("RESIZE");
+            this.resize(wmax, hmax);
+        }
+    }
+    
     
     if (ev.tool == "brush") {
         ctx.globalCompositeOperation = "source-over";
@@ -120,14 +167,17 @@ io.sockets.on("connection", function (socket) {
     });
     
     socket.on("event", function(data) {
-        Room.rooms[data.room].replayEvent(data);
+        var room = Room.rooms[data.room];
+        if(room) {
+            room.replayEvent(data);
+        }
         io.sockets.in(data.room).emit("event", data);
     });
     
     socket.on("create", function(data) {
         var room = new Room(data.width, data.height);
         
-        console.log("creating room :"+room.name+"data : "+data.pixels.length);
+        console.log("creating room:"+room.name+" width:"+room.width+" height:"+room.height+" data:"+data.pixels.length);
         
         var img = new Canvas.Image;
         img.src = data.pixels;
