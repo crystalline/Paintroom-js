@@ -8,24 +8,24 @@
     </head>
     <body>
         <div id='tools'>
-            <div class='button unselectable' id='pen_b'>
+            <div class='button unselectable' id='pen_b' title='Tools'>
                 <img src='pen.png' style='padding:2px;'></img>
             </div>
-            <div class='button unselectable' id='color_b'>
+            <div class='button unselectable' id='color_b' title='Colors'>
                 <img src='color2.png' style='padding:2px;'></img>
             </div>
-            <div class='button unselectable' id='action_b'>
+            <div class='button unselectable' id='action_b' title='Actions'>
                 <img src='gear2.png' style='padding:2px;'></img>
             </div>
         </div>
         <div class='menu' id='pen_menu'>
-            <div class='button unselectable' id='pen_brush'>
+            <div class='button unselectable' id='pen_brush' title='Brush'>
                 <img src='brush2.png' style='padding:2px;' onclick='setTool("brush")'></img>
             </div>
-            <div class='button unselectable' id='pen_eraser'>
+            <div class='button unselectable' id='pen_eraser' title='Eraser'>
                 <img src='eraser2.png' style='padding:2px;' onclick='setTool("eraser")'></img>
             </div>
-            <div class='button unselectable' id='pen_picker'>
+            <div class='button unselectable' id='pen_picker' title='Picker'>
                 <img src='color_picker2.png' style='padding:2px;' onclick='setTool("picker")'></img>
             </div>
             <div class='halfbutton unselectable' id='size1' onclick='setSize(2)'>
@@ -52,10 +52,10 @@
             </svg>
             16
             </div>
-            <div class='quarterbutton unselectable' id='sizedec' onclick='decSize()'>
+            <div class='quarterbutton unselectable' id='sizedec' onclick='decSize()' title='Increase size'>
             &minus;
             </div>
-            <div class='quarterbutton unselectable' id='sizeinc' onclick='incSize()'>
+            <div class='quarterbutton unselectable' id='sizeinc' onclick='incSize()' title='Decrease size'>
             +
             </div>
             <!-- <div class='halfhoriz'> -->
@@ -68,13 +68,13 @@
             <canvas id='color_picker' width='160px' height='160px'></canvas>
         </div>
         <div class='menu' id='action_menu'>
-            <div class='button unselectable' id='link_action' onclick='createRoom()'>
+            <div class='button unselectable' id='link_action' onclick='createRoom()' title='Share blackboard'>
                 <img src='link3.png' style='padding:2px;'></img>
             </div>
-            <div class='button unselectable' id='save_action' onclick='saveScreen()'>
+            <div class='button unselectable' id='save_action' onclick='saveScreen()' title='Save image to disk'>
                 <img src='download2.png' style='padding:2px;'></img>
             </div>
-            <div class='button unselectable' id='clear_action' onclick='clearScreen()'>
+            <div class='button unselectable' id='clear_action' onclick='clearScreen()' title='Clear blackboard'>
                 <img src='cross.png' style='padding:2px;'></img>
             </div>
         </div>

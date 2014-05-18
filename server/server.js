@@ -1,3 +1,5 @@
+//Drawing app server
+
 var io = require("socket.io").listen(3000);
 var fs = require("fs");
 var Canvas = require("node-canvas");
@@ -29,6 +31,8 @@ var Room = function(width, height) {
 
     this.name = genRoomName();
     
+    this.clientcount = 0;
+    
     this.width = Math.min(MaxCanvasWidth, width);
     this.height = Math.min(MaxCanvasHeight, height);
     this.canvas = new Canvas(width, height);
@@ -38,6 +42,7 @@ var Room = function(width, height) {
 };
 
 Room.rooms = {};
+Room.sockRoom = {};
 
 Room.prototype.replayEvent = function(ev) {
     ctx = this.ctx;
@@ -80,19 +85,30 @@ io.sockets.on("connection", function (socket) {
         }
     });
     
-    socket.on("subscribe", function(data) { socket.join(data); });
+    socket.on("subscribe", function(data) {
+        if(Room.rooms[data]) {
+            Room.rooms[data].clientcount++;
+        }
+        socket.join(data);
+        socket.myRoom = Room.rooms[data];
+    });
     
-    socket.on("unsubscribe", function(data) { socket.leave(data); });
+    socket.on("unsubscribe", function(data) {
+        if(Room.rooms[data]) {
+            if (Room.rooms[data].clientcount > 0) {
+                Room.rooms[data].clientcount--;
+            }
+        }
+        socket.leave(data);
+        delete socket.myRoom;
+    });
     
     socket.on("sync", function(data) {
         var room = Room.rooms[data.room];
         var requestWidth = data.width;
         var requestHeight = data.height;
         if (room) {
-            //var imageData = room.ctx.getImageData(0, 0, Math.min(room.width, requestWidth), Math.min(room.height, requestHeight))
-            //imageData.height = Math.min(room.height, requestHeight);
-            //imageData.width = Math.min(room.width, requestWidth);
-            
+     
             var imageData = room.canvas.toDataURL();
             
             console.log("syncing room :"+room.name+"data : "+imageData.length);
@@ -119,7 +135,18 @@ io.sockets.on("connection", function (socket) {
         room.ctx.drawImage(img,0,0);
         
         socket.emit("create", room.name);
+     
     });
     
+});
+
+io.sockets.on("disconnect", function (socket) {
+    if(socket.myRoom) {
+        if (myRoom[data].clientcount > 0) {
+            myRoom[data].clientcount--;
+        }
+        socket.leave(myRoom.name);
+        delete socket.myRoom;
+    }
 });
 
