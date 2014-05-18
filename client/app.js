@@ -1,5 +1,8 @@
 //Canvas drawing application
 
+var MaxCanvasWidth = 2000,
+    MaxCanvasHeight = 1100;
+
 //Utility functions
 function getbyid(id) {
     return document.getElementById(id);
@@ -7,10 +10,10 @@ function getbyid(id) {
 
 function toggleVis(id) {
     var vis = getbyid(id).style;
-    if(!vis.visibility) {
+    if (!vis.visibility) {
         vis.visibility = "hidden";
     }
-    if(vis.visibility == "hidden") {
+    if (vis.visibility == "hidden") {
         vis.visibility = "visible";
     } else {
         vis.visibility = "hidden";
@@ -24,10 +27,7 @@ function rgbToHex(r, g, b) {
     }
     return ((r << 16) | (g << 8) | b).toString(16);
 }
-
-//Network connection
-socket = io.connect("http://localhost:3000");
-               
+             
 //Buttons and menus   
 buttonActive = {"pen_b":false, "color_b":false, "action_b":false};
 buttonMenus = {"pen_b":"pen_menu", "color_b":"color_menu", "action_b":"action_menu"};
@@ -41,7 +41,7 @@ function resetMenu() {
 function renderMenu() {
     Object.keys(buttonActive).forEach(
         function(key) {
-            if(buttonActive[key]) {
+            if (buttonActive[key]) {
                 getbyid(buttonMenus[key]).style.visibility = "visible";
                 getbyid(key).className = "button-selected";
             } else {
@@ -55,7 +55,7 @@ function renderMenu() {
 Object.keys(buttonActive).forEach(
     function(key) {
         getbyid(key).onclick = function () {
-            if(buttonActive[key]) {
+            if (buttonActive[key]) {
                 resetMenu();
                 renderMenu();
             } else {
@@ -78,25 +78,25 @@ var prevColor = 'green'
 sizeInput.value = toolSize;
 
 function setTool(type) {
-    if(type == "brush" && toolType != "brush") {
+    if (type == "brush" && toolType != "brush") {
         ctx.globalCompositeOperation = "source-over";
     }
-    if(type == "eraser") {
+    if (type == "eraser") {
         ctx.globalCompositeOperation = "destination-out";
     }
     toolType = type;
 }
 
 function setSize(x) { 
-  if(isNaN(x)) {
+  if (isNaN(x)) {
     toolSize = 4;
     sizeInput.value = toolSize;
     return;
   }
-  if(x<1) {
+  if (x<1) {
     toolSize = 1;
   } else {
-    if(x >= 64) {
+    if (x >= 64) {
         toolSize = 64;
     } else {
         toolSize = x;
@@ -105,8 +105,8 @@ function setSize(x) {
   sizeInput.value = toolSize;
 }
 
-function incSize() { if(toolSize < 64) toolSize++; sizeInput.value = toolSize;}
-function decSize() { if(toolSize > 1) toolSize--; sizeInput.value = toolSize;}
+function incSize() { if (toolSize < 64) toolSize++; sizeInput.value = toolSize;}
+function decSize() { if (toolSize > 1) toolSize--; sizeInput.value = toolSize;}
 
 //Color picker
 var pickerCanvas = getbyid("color_picker");
@@ -208,7 +208,7 @@ pickerCanvas.addEventListener("mousemove", function(event) {
                                             event = event || window.event;
                                             var x = event.pageX - pickerCanvas.offsetLeft - cx,
                                                 y = (p2dh-(event.pageY - (pickerCanvas.offsetTop+mdy)))-cy;
-                                            if(pickerMouseButton == 1) {
+                                            if (pickerMouseButton == 1) {
                                                 hue = ((Math.atan2(-y,-x)/Math.PI)+1)*0.5*360;
                                                 S=95; V=95;
                                                 redrawPicker();
@@ -227,22 +227,122 @@ var mouseDown = 0;
 
 var canvas = document.createElement("canvas");
 canvas.id = "screen";
-canvas.width = window.innerWidth;
+canvas.width = Math.min(MaxCanvasWidth, window.innerWidth);
 canvas.style.position = "absolute";
 canvas.style.top = tools.offsetHeight.toString()+"px";
 canvas.style.left = "0px";
-canvas.height = window.innerHeight - tools.offsetHeight;
+canvas.height = Math.min(MaxCanvasHeight, window.innerHeight - tools.offsetHeight);
 document.body.appendChild(canvas);
 
 var ctx = canvas.getContext("2d");
 ctx.globalCompositeOperation = 'source-over';
+
+//Network connection
+var myRoom = window.location.hash.slice(1);
+var socket;
+
+function initSocketCallbacks() {
+    socket.on("check", function(data) {
+        if (data) {
+            myRoom = data;
+            socket.emit("subscribe", myRoom);
+            syncCanvas(myRoom);
+        } else {
+            myRoom = ""
+            window.location.hash = ""
+            alert("Cannot join room, probably too old link");
+        }
+    });
+    
+    socket.on("sync", function(data) {
+        if (data.status) {
+            console.log("sync");
+            
+            var img = new Image;
+            img.src = data.pixels;
+            img.onload = function() {
+                ctx.drawImage(img,0,0);
+            }
+        }
+    });
+    
+    socket.on("create", function(name) {
+        window.location.hash = name;
+        myRoom = name;
+        socket.emit("subscribe", myRoom);
+    });
+    
+    socket.on("event", replayEvent);
+}
+
+if (myRoom) {
+    socket = io.connect("http://127.0.0.1:3000");
+    
+    initSocketCallbacks();
+    
+    //Check if room exists
+    socket.on('connect', function () {
+        socket.emit("check", myRoom);
+    });
+}
+             
+function sendEvent(desc) {
+    if (myRoom) {
+        desc.room = myRoom;
+        socket.emit("event", desc);
+    }
+}
+
+//If our link indicates that we should be in a room, then connect to it and sync data
+function syncCanvas(room) {
+    socket.emit("sync", {room:room, width:canvas.width, height:canvas.height});
+}
+
+function createRoom() {
+    if (!socket) {
+        socket = io.connect("http://127.0.0.1:3000");
+        initSocketCallbacks();
+        //socket.emit("create", {pixels:ctx.getImageData(0, 0, canvas.width, canvas.height), width:canvas.width, height:canvas.height});
+        socket.emit("create", {pixels:canvas.toDataURL(), width:canvas.width, height:canvas.height});
+    }
+}
+
+//Paint received drawing events to our canvas
+function replayEvent(ev) {   
+    if (ev.tool == "brush") {
+        ctx.globalCompositeOperation = "source-over";
+        ctx.fillStyle = ev.col;
+        ctx.strokeStyle = ev.col;
+    }
+    if (ev.tool == "erase") {
+        ctx.globalCompositeOperation = "destination-out";
+        ctx.fillStyle = "rgba(0,0,0,255)";
+        ctx.strokeStyle = "rgba(0,0,0,255)";
+    }
+    
+    if (ev.type == "point") {
+        ctx.beginPath();
+        ctx.arc(ev.x, ev.y, ev.radius, 0, 2 * Math.PI, false);
+        ctx.fill();
+    }
+    if (ev.type == "line") {
+        ctx.lineWidth = ev.width;
+        ctx.lineCap = 'round';
+        ctx.beginPath();
+        ctx.moveTo(ev.px, ev.py);
+        ctx.lineTo(ev.x, ev.y);
+        ctx.stroke();
+    }
+};
+
+//Client-side painting utilities and event handlers
 
 function saveScreen() {
     window.location.href = canvas.toDataURL("image/png").replace("image/png", "image/octet-stream");
 }
 
 function clearScreen() {
-    if(confirm('Caution: you are going to erase entire painting canvas.\n                                Are you sure?')) { 
+    if (confirm('Caution: you are going to erase entire painting canvas.\n                                Are you sure?')) { 
         //ctx.fillStyle = "rgba(0,0,0,0)";
         ctx.clearRect(0, 0, canvas.width, canvas.height);
     }
@@ -253,14 +353,14 @@ function applyColorPickerTool(ctx,x,y) {
     var hex = "#" + ("000000" + rgbToHex(p[0], p[1], p[2])).slice(-6);
     var hsv = rgb2hsv(p[0],p[1],p[2]);
     //Handle picking on empty pixels
-    if(p[3] != 0) {
+    if (p[3] != 0) {
         hue = hsv.h;
         S = hsv.s;
         V = hsv.v;
         
         toolColor = hex;
 
-        if(getbyid("color_menu").style.visibility == "visible") {
+        if (getbyid("color_menu").style.visibility == "visible") {
             redrawPicker();
         }
     }
@@ -269,31 +369,42 @@ function applyColorPickerTool(ctx,x,y) {
 }
 
 function resizeCanvas() {
-	canvas.width = window.innerWidth;
-	canvas.height = window.innerHeight;
+	var oldWidth = canvas.width;
+	var oldHeight = canvas.height;
+	var newWidth = window.innerWidth;
+	var newHeight = window.innerHeight - tools.offsetHeight;
+	
+	if(newHeight > oldHeight || newWidth > oldWidth) {
+	    var data = ctx.getImageData();
+	    canvas.width = Math.min(MaxCanvasWidth, newWidth);
+	    canvas.height = Math.min(MaxCanvasHeight, newHeight);
+	    ctx.putImageData(data,0,0);
+	}
 }
 
 function onMove(event) {
     event = event || window.event;
     var x = event.pageX - canvas.offsetLeft,
         y = event.pageY - canvas.offsetTop;
-    if(mouseDown) {
-        if(px && py) {
-            if(toolType == "brush" || toolType == "eraser") {
+    if (mouseDown) {
+        if (px && py) {
+            if (toolType == "brush" || toolType == "eraser") {
                 ctx.beginPath();
                 ctx.moveTo(px,py);
                 ctx.lineTo(x, y);
                 ctx.lineWidth = toolSize;
-                if(toolType == "brush") {
+                if (toolType == "brush") {
                     ctx.strokeStyle = toolColor;
+                    sendEvent({type:"line", tool:"brush", width:toolSize, col:toolColor, px:px, py:py, x:x, y:y});
                 } else {
                     ctx.strokeStyle = "rgba(0,0,0,255)";
+                    sendEvent({type:"line", tool:"erase", width:toolSize, px:px, py:py, x:x, y:y});
                 }
                 ctx.lineCap = 'round';
                 ctx.stroke();
                 //alert(toolColor);
             }
-            if(toolType == "picker") {
+            if (toolType == "picker") {
                 applyColorPickerTool(ctx,x,y);
             }
         }
@@ -306,22 +417,24 @@ function onClick(event) {
     event = event || window.event;
     var x = event.pageX - canvas.offsetLeft,
         y = event.pageY - canvas.offsetTop;
-    if(toolType == "brush" || toolType == "eraser") {
+    if (toolType == "brush" || toolType == "eraser") {
         ctx.beginPath();
         ctx.arc(x, y, toolSize/2, 0, 2 * Math.PI, false);
-        if(toolType == "brush") {
+        if (toolType == "brush") {
             ctx.fillStyle = toolColor;
+            sendEvent({type:"point", tool:"brush", radius:(toolSize/2), col:toolColor, x:x, y:y});
         } else {
             ctx.fillStyle = "rgba(0,0,0,255)";
+            sendEvent({type:"point", tool:"erase", radius:(toolSize/2), x:x, y:y});
         }
         ctx.fill();
     }
-    if(toolType == "picker") {
+    if (toolType == "picker") {
         applyColorPickerTool(ctx,x,y);
     }
 }
 
-window.addEventListener('resize', resizeCanvas, false);
+window.addEventListener("resize", resizeCanvas, false);
 
 canvas.addEventListener("mousemove", onMove, false);
 canvas.addEventListener("click", onClick, false);
