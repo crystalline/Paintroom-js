@@ -479,7 +479,7 @@ function updateColorSV() {
     toolColor = "rgb("+color[0]+","+color[1]+","+color[2]+")";
     picker2d.fillStyle = toolColor;
     
-    //draw central color circle
+    //draw central color circle    
     picker2d.beginPath();
     picker2d.arc(cx, cy, p2dw*0.5*0.4, 0, 2 * Math.PI, false);
     picker2d.fillStyle = toolColor;
@@ -490,7 +490,7 @@ function redrawPicker() {
     picker2d.putImageData(wheelPixels,0,0);
     var color = hsvToRgb(hue,S,V);
     toolColor = "rgb("+color[0]+","+color[1]+","+color[2]+")";
-    picker2d.fillStyle = toolColor;
+    
     //picker2d.fillRect(cx-0.2*p2dw, cy-0.2*p2dh, 0.4*p2dw, 0.4*p2dh);
     //draw central color circle
     picker2d.beginPath();
