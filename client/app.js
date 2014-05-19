@@ -68,6 +68,8 @@ altToolbar.prototype.addListeners = function() {
 
 var penToolbar = new altToolbar("button unhighlight", "button-orange unhighlight", ["pen_brush", "pen_eraser", "pen_picker"]);
 penToolbar.reset();
+penToolbar.active = getbyid("pen_brush");
+penToolbar.active.className = penToolbar.css_set; 
 penToolbar.addListeners();
 
 //Buttons and menus   
@@ -685,9 +687,11 @@ function onClick(event) {
         ctx.beginPath();
         ctx.arc(x, y, toolSize/2, 0, 2 * Math.PI, false);
         if (toolType == "brush") {
+            ctx.globalCompositeOperation = "source-over";
             ctx.fillStyle = toolColor;
             sendEvent({type:"point", tool:"brush", radius:(toolSize/2), col:toolColor, x:x, y:y});
         } else {
+            ctx.globalCompositeOperation = "destination-out";
             ctx.fillStyle = "rgba(0,0,0,255)";
             sendEvent({type:"point", tool:"erase", radius:(toolSize/2), x:x, y:y});
         }
