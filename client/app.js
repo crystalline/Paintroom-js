@@ -660,9 +660,11 @@ function onMove(event) {
                 ctx.lineTo(x, y);
                 ctx.lineWidth = toolSize;
                 if (toolType == "brush") {
+                    ctx.globalCompositeOperation = "source-over";
                     ctx.strokeStyle = toolColor;
                     sendEvent({type:"line", tool:"brush", width:toolSize, col:toolColor, px:px, py:py, x:x, y:y});
                 } else {
+                    ctx.globalCompositeOperation = "destination-out";
                     ctx.strokeStyle = "rgba(0,0,0,255)";
                     sendEvent({type:"line", tool:"erase", width:toolSize, px:px, py:py, x:x, y:y});
                 }
