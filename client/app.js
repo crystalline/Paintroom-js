@@ -218,6 +218,32 @@ function CanvasEventRouter(canvas, rects) {
                 }
             });    
         }, false);
+    
+    //Touch events
+    this.canvas.addEventListener("touchstart", function(e) {
+                                    e.preventDefault();
+                                    router.mouseDown = true;
+                                }, false);
+    
+    this.canvas.addEventListener("touchend", function(e) {
+                                    e.preventDefault();
+                                    router.mouseDown = false;
+                                }, false);
+    
+    this.canvas.addEventListener("touchmove",
+    function(event) {
+        event = event || window.event;
+        var x = event.touches[0].pageX - router.dx,
+            y = event.touches[0].pageY - router.dy;
+        event.preventDefault();
+        router.rects.forEach(function(rect) {
+            if(rect.inside(x,y)) {
+                if(rect.mmove) {
+                    rect.mmove(x-rect.x, y-rect.y, router.mouseDown);
+                }
+            }
+        });    
+    }, false);
 }
 
 //Color picker
@@ -720,9 +746,14 @@ window.addEventListener("resize", resizeCanvas, false);
 canvas.addEventListener("mousemove", onMove, false);
 canvas.addEventListener("click", onClick, false);
 
-canvas.addEventListener("touchstart", function(e) {e.preventDefault(); mouseDown = 1; px = false; py = false;}, false);
+canvas.addEventListener("touchstart", function(e) {
+                                    e.preventDefault();
+                                    mouseDown = 1;
+                                    px = event.touches[0].pageX - canvas.offsetLeft,
+                                    py = event.touches[0].pageY - canvas.offsetTop;
+                                }, false);
 canvas.addEventListener("touchmove", onTouchMove, false);
-canvas.addEventListener("touchend", function(e) {e.preventDefault();mouseDown = 0; px = false; py = false;}, false);
+canvas.addEventListener("touchend", function(e) {e.preventDefault(); mouseDown = 0; px = false; py = false;}, false);
 
 canvas.onmousedown = function() { 
     mouseDown = 1;
