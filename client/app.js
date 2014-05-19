@@ -648,10 +648,7 @@ function resizeCanvas() {
 	}
 }
 
-function onMove(event) {
-    event = event || window.event;
-    var x = event.pageX - canvas.offsetLeft,
-        y = event.pageY - canvas.offsetTop;
+function drawCanvasLine(x, y) {
     if (mouseDown) {
         if (px && py) {
             if (toolType == "brush" || toolType == "eraser") {
@@ -681,6 +678,21 @@ function onMove(event) {
     }
 }
 
+function onMove(event) {
+    event = event || window.event;
+    var x = event.pageX - canvas.offsetLeft,
+        y = event.pageY - canvas.offsetTop;
+    drawCanvasLine(x, y);
+}
+
+function onTouchMove(event) {
+    event = event || window.event;
+    var x = event.touches[0].pageX - canvas.offsetLeft,
+        y = event.touches[0].pageY - canvas.offsetTop;
+    event.preventDefault();
+    drawCanvasLine(x, y);
+}
+
 function onClick(event) {
     event = event || window.event;
     var x = event.pageX - canvas.offsetLeft,
@@ -705,9 +717,12 @@ function onClick(event) {
 }
 
 window.addEventListener("resize", resizeCanvas, false);
-
 canvas.addEventListener("mousemove", onMove, false);
 canvas.addEventListener("click", onClick, false);
+
+canvas.addEventListener("touchstart", function(e) {e.preventDefault(); mouseDown = 1; px = false; py = false;}, false);
+canvas.addEventListener("touchmove", onTouchMove, false);
+canvas.addEventListener("touchend", function(e) {e.preventDefault();mouseDown = 0; px = false; py = false;}, false);
 
 canvas.onmousedown = function() { 
     mouseDown = 1;
