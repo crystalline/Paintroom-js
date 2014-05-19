@@ -4,6 +4,8 @@ var io = require("socket.io").listen(3000);
 var fs = require("fs");
 var Canvas = require("node-canvas");
 
+io.set('log level', 1);
+
 function makeid(len) {
     var text = "";
     var possible = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
@@ -171,13 +173,14 @@ io.sockets.on("connection", function (socket) {
         if(room) {
             room.replayEvent(data);
         }
-        io.sockets.in(data.room).emit("event", data);
+        //io.sockets.in(data.room).emit("event", data);
+        socket.broadcast.to(data.room).emit("event", data) //emit to 'room' except this socket
     });
     
     socket.on("create", function(data) {
         var room = new Room(data.width, data.height);
         
-        console.log("creating room:"+room.name+" width:"+room.width+" height:"+room.height+" data:"+data.pixels.length);
+        console.log("creating room: "+room.name+" width:"+room.width+" height:"+room.height+" data:"+data.pixels.length);
         
         var img = new Canvas.Image;
         img.src = data.pixels;

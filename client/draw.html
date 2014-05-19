@@ -8,54 +8,67 @@
     </head>
     <body>
         <div id='tools'>
-            <div class='button unselectable' id='pen_b' title='Tools'>
+            <div class='button unhighlight' id='pen_b' title='Tools'>
                 <img src='pen.png' style='padding:2px;'></img>
             </div>
-            <div class='button unselectable' id='color_b' title='Colors'>
+            <div class='button unhighlight' id='color_b' title='Colors'>
                 <img src='color2.png' style='padding:2px;'></img>
             </div>
-            <div class='button unselectable' id='action_b' title='Actions'>
+            <div class='button unhighlight' id='action_b' title='Actions'>
                 <img src='gear2.png' style='padding:2px;'></img>
             </div>
+            <div class='button unhighlight' id='link_action' onclick='createRoom()' title='Make public. Invite others to draw with you!'>
+                <img src='link3.png' style='padding:2px;'></img>
+            </div>
+            <a href='https://github.com/crystalline/Paintroom-js'>
+            <div class='shadow-icon unhighlight' id='github' title='Fork me on github!'>
+                <img src='octocat.png' style='padding:2px;'></img>
+            </div>
+            </a>
+            <a href='mailto:crystalline.emerald@gmail.com'>
+            <div class='shadow-icon unhighlight' id='mail' title='Email author'>
+                <img src='mail4.png' style='padding:2px;'></img>
+            </div>
+            </a>
         </div>
         <div class='menu' id='pen_menu'>
-            <div class='button unselectable' id='pen_brush' title='Brush'>
+            <div class='button unhighlight' id='pen_brush' title='Brush'>
                 <img src='brush2.png' style='padding:2px;' onclick='setTool("brush")'></img>
             </div>
-            <div class='button unselectable' id='pen_eraser' title='Eraser'>
+            <div class='button unhighlight' id='pen_eraser' title='Eraser'>
                 <img src='eraser2.png' style='padding:2px;' onclick='setTool("eraser")'></img>
             </div>
-            <div class='button unselectable' id='pen_picker' title='Picker'>
+            <div class='button unhighlight' id='pen_picker' title='Picker'>
                 <img src='color_picker2.png' style='padding:2px;' onclick='setTool("picker")'></img>
             </div>
-            <div class='halfbutton unselectable' id='size1' onclick='setSize(2)'>
+            <div class='halfbutton unhighlight' id='size1' onclick='setSize(2)'>
             <svg xmlns="http://www.w3.org/2000/svg" class='halficon'>
                 <circle cx="10" cy="10" r="1" fill="black" />
             </svg>
             2
             </div>
-            <div class='halfbutton unselectable' id='size2' onclick='setSize(4)'>
+            <div class='halfbutton unhighlight' id='size2' onclick='setSize(4)'>
             <svg xmlns="http://www.w3.org/2000/svg" class='halficon'>
                 <circle cx="10" cy="10" r="2" fill="black" />
             </svg>
             4
             </div>
-            <div class='halfbutton unselectable' id='size3' onclick='setSize(8)'>
+            <div class='halfbutton unhighlight' id='size3' onclick='setSize(8)'>
             <svg xmlns="http://www.w3.org/2000/svg" class='halficon'>
                 <circle cx="10" cy="10" r="4" fill="black" />
             </svg>
             8
             </div>
-            <div class='halfbutton unselectable' id='size4' onclick='setSize(16)'>
+            <div class='halfbutton unhighlight' id='size4' onclick='setSize(16)'>
             <svg xmlns="http://www.w3.org/2000/svg" class='halficon'>
                 <circle cx="10" cy="10" r="8" fill="black" />
             </svg>
             16
             </div>
-            <div class='quarterbutton unselectable' id='sizedec' onclick='decSize()' title='Increase size'>
+            <div class='quarterbutton unhighlight' id='sizedec' onclick='decSize()' title='Increase size'>
             &minus;
             </div>
-            <div class='quarterbutton unselectable' id='sizeinc' onclick='incSize()' title='Decrease size'>
+            <div class='quarterbutton unhighlight' id='sizeinc' onclick='incSize()' title='Decrease size'>
             +
             </div>
             <!-- <div class='halfhoriz'> -->
@@ -65,18 +78,23 @@
             <!-- </div> -->
         </div>
         <div class='menu' id='color_menu'>
-            <canvas id='color_picker' width='160px' height='160px'></canvas>
+            <canvas id='color_picker' width='212px' height='160px'></canvas>
         </div>
         <div class='menu' id='action_menu'>
-            <div class='button unselectable' id='link_action' onclick='createRoom()' title='Share blackboard'>
-                <img src='link3.png' style='padding:2px;'></img>
-            </div>
-            <div class='button unselectable' id='save_action' onclick='saveScreen()' title='Save image to disk'>
-                <img src='download2.png' style='padding:2px;'></img>
-            </div>
-            <div class='button unselectable' id='clear_action' onclick='clearScreen()' title='Clear blackboard'>
+            <div class='button unhighlight' id='clear_action' onclick='clearScreen()' title='Clear canvas'>
                 <img src='cross.png' style='padding:2px;'></img>
             </div>
+            <div class='button unhighlight' id='save_action' onclick='saveScreen()' title='Save image to disk'>
+                <img src='download2.png' style='padding:2px;'></img>
+            </div>
+            <div class='button unhighlight' id='link_resync' onclick='syncCanvas(myRoom)' title='Resync canvas with server'>
+                <img src='refresh.png' style='padding:2px;'></img>
+            </div>
+            <a href='http://paint.neon.org'>
+            <div class='button unhighlight' id='exit' title='Leave'>
+                <img src='exit.png' style='padding:2px;'></img>
+            </div>
+            </a>
         </div>
         <script src='colors.js'></script>
         <script src='socket.io.js'></script>

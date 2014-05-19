@@ -29,7 +29,7 @@ svg.halficon {
     height: 26px;
 }
 
-.unselectable {
+.unhighlight {
    -moz-user-select: none;
    -khtml-user-select: none;
    -webkit-user-select: none;
@@ -125,6 +125,42 @@ svg.halficon {
     user-select: none;
 }
 
+.button-orange {
+    width: 48px;
+    height: 48px;
+    cursor: pointer; cursor: hand;
+    background-color: #FF6689;
+    box-shadow: 0 0 3px #ff6a00;
+    float: left;
+    margin-top: 4px;
+    margin-left: 4px;
+    margin-right: 0px;
+    -moz-border-radius: 4px;
+    border-radius: 4px;
+    user-select: none;
+}
+
+.shadow-icon {
+    width: 48px;
+    height: 48px;
+    background-color: #fbc7a0;
+    float: right;
+    margin-top: 4px;
+    margin-left: 0px;
+    margin-right: 4px;
+    -moz-border-radius: 4px;
+    border-radius: 4px;
+    user-select: none;
+}
+
+.shadow-icon:hover {
+    cursor: pointer; cursor: hand;
+    /* background-color: #ffbb8b; */
+    background-color: #FF6633;
+    box-shadow: 0 0 3px #ff6a00;
+}
+
+
 .button-selected {
     width: 48px;
     height: 52px;
@@ -174,12 +210,12 @@ svg.halficon {
 }
 
 #color_menu {
-    width: 160px;
+    width: 212px;
     height: 160px;
 }
 
 #action_menu {
-    width: 160px;
+    width: 212px;
     height: 56px;
 }
 

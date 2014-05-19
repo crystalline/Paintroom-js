@@ -21,14 +21,55 @@ function toggleVis(id) {
     }
 }
 
-function rgbToHex(r, g, b) {
-    if (r > 255 || g > 255 || b > 255) {
-        console.log("Invalid color component");
-        return "#000000";
+function findOffset(obj) {
+	var curleft = curtop = 0;
+    if (obj.offsetParent) {
+        do {
+		    curleft += obj.offsetLeft;
+		    curtop += obj.offsetTop;
+        } while (obj = obj.offsetParent);
     }
-    return ((r << 16) | (g << 8) | b).toString(16);
+	return [curleft,curtop];
 }
-             
+
+//Helper class to manage tool highlighting, should be adaptable to any toolbar-like interface
+function altToolbar(css_reset, css_set, ids) {
+    this.ids = ids||[];
+    this.active = false;
+    this.css_reset = css_reset;
+    this.css_set = css_set;
+}
+
+altToolbar.prototype.reset = function() {
+    var toolbar = this;
+    this.ids.forEach(function(id) {
+        this.active = false;
+        getbyid(id).className = toolbar.css_reset;
+    });
+};
+
+altToolbar.prototype.addListeners = function() {
+    var toolbar = this;
+    this.ids.forEach(function(id) {
+        getbyid(id).onclick = function () {
+            if (toolbar.active == this) {
+                toolbar.active = false;
+                this.className = toolbar.css_reset;
+            } else {
+                if(toolbar.active) {
+                  toolbar.active.className = toolbar.css_reset;
+                }
+                toolbar.active = this;
+                toolbar.active.className = toolbar.css_set;  
+            }
+        };
+    });
+};
+
+var penToolbar = new altToolbar("button unhighlight", "button-orange unhighlight", ["pen_brush", "pen_eraser", "pen_picker"]);
+penToolbar.reset();
+penToolbar.addListeners();
+
 //Buttons and menus   
 buttonActive = {"pen_b":false, "color_b":false, "action_b":false};
 buttonMenus = {"pen_b":"pen_menu", "color_b":"color_menu", "action_b":"action_menu"};
@@ -109,12 +150,139 @@ function setSize(x) {
 function incSize() { if (toolSize < 64) toolSize++; sizeInput.value = toolSize;}
 function decSize() { if (toolSize > 1) toolSize--; sizeInput.value = toolSize;}
 
+//Canvas utilities
+function Rect(x,y,w,h) {
+    this.x = x;
+	this.y = y;
+	this.x_end = x+w;
+	this.y_end = y+h;
+	this.w = w;
+	this.h = h;
+}
+
+Rect.prototype.inside = function(x,y) {
+	return (x >= this.x) && (x < this.x_end) &&
+		   (y >= this.y) && (y < this.y_end);
+};
+
+function CanvasEventRouter(canvas, rects) {
+
+    var router = this;
+    
+    this.canvas = canvas;
+    this.rects = rects;
+
+    var offset = findOffset(canvas);
+    this.dy = offset[1];
+    this.dx = offset[0];
+    
+    this.mouseDown = false;
+    this.canvas.onmousedown = function() { 
+        router.mouseDown = true;
+        console.log(router.mouseDown);
+    };
+    this.canvas.onmouseup = function() {
+        router.mouseDown = false;
+        console.log(router.mouseDown);
+    }
+    
+    this.canvas.addEventListener("click",
+        function(event) {
+            event = event || window.event;
+            var x = event.pageX - router.dx,
+                y = event.pageY - router.dy;
+            router.rects.forEach(function(rect) {
+                if(rect.inside(x,y)) {
+                    if(rect.click) {
+                        rect.click(x-rect.x, y-rect.y);
+                    }
+                }
+            });    
+        }, false);
+    
+    this.canvas.addEventListener("mousemove",
+        function(event) {
+            event = event || window.event;
+            var x = event.pageX - router.dx,
+                y = event.pageY - router.dy;
+            router.rects.forEach(function(rect) {
+                if(rect.inside(x,y)) {
+                    if(rect.mmove) {
+                        rect.mmove(x-rect.x, y-rect.y, router.mouseDown);
+                    }
+                }
+            });    
+        }, false);
+}
+
 //Color picker
 var pickerCanvas = getbyid("color_picker");
 var picker2d = pickerCanvas.getContext("2d");
 var p2dh = pickerCanvas.height;
-var p2dw = pickerCanvas.width;
+var p2dw = pickerCanvas.width-52;
 var cx = p2dw/2, cy = p2dh/2;
+
+                                         //   var x = event.pageX - pickerCanvas.offsetLeft - cx,
+                                         //       y = (p2dh-(event.pageY - (pickerCanvas.offsetTop+mdy)))-cy;
+
+var canvasRect = new Rect(0, 0, p2dw, p2dh);
+canvasRect.click = function(x,y) {
+                    var x = x - this.w/2,
+                        y = (this.h-y)-this.h/2;
+                        hue = ((Math.atan2(-y,-x)/Math.PI)+1)*0.5*360;
+                        S=95; V=95;
+                        redrawPicker();
+                    };
+              
+canvasRect.mmove = function(x,y, mouseButton) {
+                    var x = x - this.w/2,
+                        y = (this.h-y)-this.h/2;
+                    if (mouseButton) {
+                        hue = ((Math.atan2(-y,-x)/Math.PI)+1)*0.5*360;
+                        S=95; V=95;
+                        redrawPicker();
+                    }
+                   };
+
+var tableRect = new Rect(p2dw+4, 4, pickerCanvas.width-(p2dw+8), (p2dh-8));
+tableRect.click = function(x,y) {
+    applyColorPickerTool(picker2d, x+this.x, y+this.y);
+};
+tableRect.mmove = function(x,y, mouseDown) {
+    if (mouseDown) {
+        applyColorPickerTool(picker2d, x+this.x, y+this.y);
+    }
+};
+
+var colorTable = [[0,0,0],[0xFF,0xFF,0xFF]];
+var nColors = 16;
+
+for(i=2; i<nColors; i++) {
+    colorTable.push([Math.ceil(Math.random()*255),Math.ceil(Math.random()*255),Math.ceil(Math.random()*255)]);
+}
+var hexTable = [];
+for(i=0; i<nColors; i++) {
+    var r = colorTable[i][0],
+        g = colorTable[i][1],
+        b = colorTable[i][2];
+    hexTable.push("#"+rgbToHex(r,g,b));
+}
+
+var router = new CanvasEventRouter(pickerCanvas, [canvasRect, tableRect]);
+
+//Color table
+function drawColorTable(x, y, rows, cols, row_size, col_size) {
+    for(i=0; i<rows; i++) {
+        for(j=0; j<cols; j++) {
+            var color = colorTable[i*cols+j];
+            var hex = hexTable[i*cols+j];
+            picker2d.fillStyle = hex;
+            picker2d.fillRect(x+col_size*j, y+row_size*i, col_size, row_size);
+        }
+    }
+}
+
+drawColorTable(tableRect.x, tableRect.y, 8, 2, tableRect.h/8, tableRect.w/2);
 
 picker2d.fillStyle = "rgba(255,255,255,0)";
 picker2d.fillRect(0, 0, p2dw, p2dh);
@@ -185,39 +353,7 @@ function redrawPicker() {
 
 redrawPicker();
 
-pickerCanvas.onmousedown = function() { 
-    pickerMouseButton = 1;
-}
-pickerCanvas.onmouseup = function() {
-    pickerMouseButton = 0;
-}
-
-var mdx = getbyid("color_menu").offsetLeft;
-var mdy = getbyid("color_menu").offsetTop;
-
-pickerCanvas.addEventListener("click", function(event) {
-                                        event = event || window.event;
-                                        var x = event.pageX - (pickerCanvas.offsetLeft) - cx,
-                                            y = (p2dh-(event.pageY - (pickerCanvas.offsetTop+mdy)))-cy;
-                                            hue = ((Math.atan2(-y,-x)/Math.PI)+1)*0.5*360;
-                                            S=95; V=95;
-                                            redrawPicker();
-                                       }
-                                    , false);
-
-pickerCanvas.addEventListener("mousemove", function(event) {
-                                            event = event || window.event;
-                                            var x = event.pageX - pickerCanvas.offsetLeft - cx,
-                                                y = (p2dh-(event.pageY - (pickerCanvas.offsetTop+mdy)))-cy;
-                                            if (pickerMouseButton == 1) {
-                                                hue = ((Math.atan2(-y,-x)/Math.PI)+1)*0.5*360;
-                                                S=95; V=95;
-                                                redrawPicker();
-                                            }
-                                           }
-                                    , false);
-
-//Canvas and drawing
+//Main canvas and drawing
 
 //Chrome fix to disable cursor change on dragging
 document.onselectstart = function(){ return false; };
@@ -296,7 +432,8 @@ function sendEvent(desc) {
 
 //If our link indicates that we should be in a room, then connect to it and sync data
 function syncCanvas(room) {
-    socket.emit("sync", {room:room, width:canvas.width, height:canvas.height});
+    if (room)
+        socket.emit("sync", {room:room, width:canvas.width, height:canvas.height});
 }
 
 function createRoom() {
@@ -450,3 +587,4 @@ canvas.onmouseup = function() {
     px=false;
     py=false;
 }
+
