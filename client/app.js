@@ -53,8 +53,8 @@ altToolbar.prototype.addListeners = function() {
     this.ids.forEach(function(id) {
         getbyid(id).onclick = function () {
             if (toolbar.active == this) {
-                toolbar.active = false;
-                this.className = toolbar.css_reset;
+                //toolbar.active = false;
+                //this.className = toolbar.css_reset;
             } else {
                 if(toolbar.active) {
                   toolbar.active.className = toolbar.css_reset;
@@ -116,6 +116,9 @@ var toolType = "brush";
 var sizeInput = getbyid("sizeinp");
 
 var prevColor = 'green'
+
+var S = 95, V = 95;
+var hue = 0;
 
 sizeInput.value = toolSize;
 
@@ -179,11 +182,11 @@ function CanvasEventRouter(canvas, rects) {
     this.mouseDown = false;
     this.canvas.onmousedown = function() { 
         router.mouseDown = true;
-        console.log(router.mouseDown);
+        //console.log(router.mouseDown);
     };
     this.canvas.onmouseup = function() {
         router.mouseDown = false;
-        console.log(router.mouseDown);
+        //console.log(router.mouseDown);
     }
     
     this.canvas.addEventListener("click",
@@ -218,7 +221,7 @@ function CanvasEventRouter(canvas, rects) {
 //Color picker
 var pickerCanvas = getbyid("color_picker");
 var picker2d = pickerCanvas.getContext("2d");
-var p2dh = pickerCanvas.height;
+var p2dh = pickerCanvas.height-52;
 var p2dw = pickerCanvas.width-52;
 var cx = p2dw/2, cy = p2dh/2;
 
@@ -230,7 +233,6 @@ canvasRect.click = function(x,y) {
                     var x = x - this.w/2,
                         y = (this.h-y)-this.h/2;
                         hue = ((Math.atan2(-y,-x)/Math.PI)+1)*0.5*360;
-                        S=95; V=95;
                         redrawPicker();
                     };
               
@@ -239,11 +241,11 @@ canvasRect.mmove = function(x,y, mouseButton) {
                         y = (this.h-y)-this.h/2;
                     if (mouseButton) {
                         hue = ((Math.atan2(-y,-x)/Math.PI)+1)*0.5*360;
-                        S=95; V=95;
                         redrawPicker();
                     }
                    };
 
+//Color pallete
 var tableRect = new Rect(p2dw+4, 4, pickerCanvas.width-(p2dw+8), (p2dh-8));
 tableRect.click = function(x,y) {
     applyColorPickerTool(picker2d, x+this.x, y+this.y);
@@ -258,7 +260,7 @@ var colorTable = [[0,0,0],[0xFF,0xFF,0xFF]];
 var nColors = 16;
 
 for(i=2; i<nColors; i++) {
-    colorTable.push([Math.ceil(Math.random()*255),Math.ceil(Math.random()*255),Math.ceil(Math.random()*255)]);
+    colorTable.push([Math.floor(Math.random()*255),Math.floor(Math.random()*255),Math.floor(Math.random()*255)]);
 }
 var hexTable = [];
 for(i=0; i<nColors; i++) {
@@ -268,7 +270,114 @@ for(i=0; i<nColors; i++) {
     hexTable.push("#"+rgbToHex(r,g,b));
 }
 
-var router = new CanvasEventRouter(pickerCanvas, [canvasRect, tableRect]);
+//S and V sliders
+
+Rect.prototype.makeSliderHoriz = function(onchange, drawGauge) {
+    this.border_low = Math.ceil(0.04*this.w);
+    this.border_high = this.w-this.border_low;
+    this.value = 0;
+    this.onchange = onchange;
+    this.drawGauge = drawGauge;
+}
+
+Rect.prototype.drawKnob = function() {
+    var x = this.value*(this.w-2*this.border_low)+this.border_low;
+    //alert(x);
+    picker2d.beginPath();
+    picker2d.arc(x+this.x, this.y+this.h/2, 8, 0, 2 * Math.PI, false);
+    picker2d.fillStyle = "white";
+    picker2d.fill();
+}
+
+Rect.prototype.redraw = function() {
+    picker2d.fillStyle = "#ffbb8b";
+    picker2d.fillRect(this.x, this.y, this.w, this.h);   
+    this.drawGauge(this);
+    this.drawKnob();
+}
+ 
+Rect.prototype.updateValue = function(v) {
+    if(v<0) {
+        v = 0;
+    }
+    if(v>1) {
+        v = 1;
+    }
+
+    this.value = v;
+
+    picker2d.fillStyle = "#ffbb8b";
+    picker2d.fillRect(this.x, this.y, this.w, this.h);   
+    this.drawGauge(this);
+    this.drawKnob();
+}
+
+Rect.prototype.click = function(x, y) {
+    //console.log([x,y]);
+    //console.log(this);
+    
+    var value = (x-this.border_low)/(this.w-2*this.border_low);
+    
+    this.updateValue(value);
+    this.onchange(value);
+};
+
+Rect.prototype.mmove = function(x, y, md) {
+    if (md)
+        this.click(x,y);
+};
+
+var gaugeDiv = 20;
+
+function drawSatGauge(rect) {
+    var y = rect.h/2-4+rect.y;
+    var h = 8;
+    var w = rect.w/gaugeDiv;
+   
+    for(i=0; i<gaugeDiv; i++) {
+        var color = hsvToRgb(hue,i*100/gaugeDiv,V);
+        picker2d.fillStyle = "rgb("+color[0]+","+color[1]+","+color[2]+")";
+        picker2d.fillRect(Math.ceil(i*rect.w/gaugeDiv+rect.x), y, Math.ceil(w), h);
+    }
+}
+
+function drawValGauge(rect) {
+    var y = rect.h/2-4+rect.y;
+    var h = 8;
+    var w = rect.w/gaugeDiv;
+   
+    for(i=0; i<gaugeDiv; i++) {
+        var color = hsvToRgb(hue,S,i*100/gaugeDiv);
+        picker2d.fillStyle = "rgb("+color[0]+","+color[1]+","+color[2]+")";
+        picker2d.fillRect(Math.ceil(i*rect.w/gaugeDiv+rect.x), y, Math.ceil(w), h);
+    }
+}
+
+var satRect = new Rect(8, p2dh+4, pickerCanvas.width-16, 18);
+var valRect = new Rect(8, p2dh+4+18+4, pickerCanvas.width-16, 18);
+
+function redrawSliders() {
+    satRect.redraw();
+    valRect.redraw();
+}
+
+satRect.makeSliderHoriz(
+    function(s) {
+        S = Math.floor(s*100);
+        valRect.redraw();
+        updateColorSV();
+    },
+    drawSatGauge);
+
+valRect.makeSliderHoriz(
+    function(s) {
+        V = Math.floor(s*100);
+        satRect.redraw();
+        updateColorSV();
+    },
+    drawValGauge);
+
+var router = new CanvasEventRouter(pickerCanvas, [canvasRect, tableRect, satRect, valRect]);
 
 //Color table
 function drawColorTable(x, y, rows, cols, row_size, col_size) {
@@ -289,9 +398,10 @@ picker2d.fillRect(0, 0, p2dw, p2dh);
 
 var r1 = p2dw*0.6/2, r2 = p2dw*0.9/2;
 var N = 256;
-var S = 95, V = 95;
-var hue = 0;
 var pickerMouseButton = 0;
+
+satRect.updateValue(0.5);
+valRect.updateValue(0.5);
 
 for(i=0; i<N; i+=1) {
     var phi = Math.PI*2*i/N,
@@ -336,6 +446,18 @@ function drawHueSel(hue) {
         picker2d.fill();
 }
 
+function updateColorSV() {
+    var color = hsvToRgb(hue,S,V);
+    toolColor = "rgb("+color[0]+","+color[1]+","+color[2]+")";
+    picker2d.fillStyle = toolColor;
+    
+    //draw central color circle
+    picker2d.beginPath();
+    picker2d.arc(cx, cy, p2dw*0.5*0.4, 0, 2 * Math.PI, false);
+    picker2d.fillStyle = toolColor;
+    picker2d.fill();
+}
+
 function redrawPicker() {
     picker2d.putImageData(wheelPixels,0,0);
     var color = hsvToRgb(hue,S,V);
@@ -349,6 +471,8 @@ function redrawPicker() {
     picker2d.fill();
     
     drawHueSel(hue);
+    
+    redrawSliders();
 }
 
 redrawPicker();
@@ -387,7 +511,7 @@ function initSocketCallbacks() {
         } else {
             myRoom = ""
             window.location.hash = ""
-            alert("Cannot join room, probably too old link");
+            alert("Cannot join room, looks like th room link has expired");
         }
     });
     
@@ -407,6 +531,7 @@ function initSocketCallbacks() {
         window.location.hash = name;
         myRoom = name;
         socket.emit("subscribe", myRoom);
+        prompt("You have created a drawing room.\nUse this link to invite other people to collaborate with you!\n", window.location.href);
     });
     
     socket.on("event", replayEvent);
@@ -481,7 +606,6 @@ function saveScreen() {
 
 function clearScreen() {
     if (confirm('Caution: you are going to erase entire painting canvas.\n                                Are you sure?')) { 
-        //ctx.fillStyle = "rgba(0,0,0,0)";
         ctx.clearRect(0, 0, canvas.width, canvas.height);
     }
 }
@@ -502,7 +626,7 @@ function applyColorPickerTool(ctx,x,y) {
             redrawPicker();
         }
     }
-    console.log(p);
+    //console.log(p);
     return hex;
 }
 
