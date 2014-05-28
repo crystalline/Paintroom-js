@@ -33,6 +33,16 @@ function findOffset(obj) {
 	return [curleft,curtop];
 }
 
+function makeid(len) {
+    var text = "";
+    var possible = "0123456789";
+
+    for( var i=0; i < len; i++ )
+        text += possible.charAt(Math.floor(Math.random() * possible.length));
+
+    return text;
+}
+
 //Helper class to manage tool highlighting, should be adaptable to any toolbar-like interface
 function altToolbar(css_reset, css_set, ids) {
     this.ids = ids||[];
@@ -560,7 +570,14 @@ function initSocketCallbacks() {
         prompt("You have created a drawing room.\nUse this link to invite other people to collaborate with you!\n", window.location.href);
     });
     
-    socket.on("event", replayEvent);
+    socket.on("event", function (data) {
+        if (data.type == "chat") {
+            if (chatDOM) {
+                printMsg(data);
+            }
+        } else {
+            replayEvent(data)
+        }});
 }
 
 if (myRoom) {
@@ -597,9 +614,12 @@ function createChat() {
 var draggingChat = false;
 var dragChatCoords = [0,0];
 var chatDOM = getbyid("chat_window");
+var nickname = "guest" + makeid(3);
+
+var chatDraggable = getbyid("chat_header");
 
 function toggleChat() {
-    if (!socket) {
+    if (false) {
         alert("Cannot connect to chat while not in room.\nPlease either create a new room or enter existing one.");
     } else {
         toggleVis("chat_window");
@@ -607,7 +627,7 @@ function toggleChat() {
 }
 
 //window.addEventListener('mousemove', dragChatWindow, true);
-chatDOM.addEventListener("mousedown", function(ev) {
+chatDraggable.addEventListener("mousedown", function(ev) {
     draggingChat = true;
     var x = ev.pageX - chatDOM.offsetLeft;
     var y = ev.pageY - chatDOM.offsetTop;
@@ -626,6 +646,40 @@ window.addEventListener("mousemove", function(ev) {
         div.style.left = (ev.clientX - dragChatCoords[0]) + "px";
     }
 }, false);
+
+function format2digit(number) {
+    if (number < 10) {
+        return "0" + number;
+    } else {
+        return number.toString();
+    }
+}
+
+//Send chat message
+function sendMsg() {
+    var msgText = getbyid("chatinp").value;
+    var d = new Date();
+    var currentTime = format2digit(d.getHours())+":"+
+                      format2digit(d.getMinutes())+":"+
+                      format2digit(d.getSeconds());
+    var data = {type: "chat", nick: nickname, text: msgText, time: currentTime};
+    
+    sendEvent(data);
+    getbyid("chatinp").value = "";
+    printMsg(data);
+}
+
+getbyid("chatinp").onkeydown = function(event) {
+    if(event.keyCode == 13)
+        sendMsg();
+};
+
+function printMsg(data) {
+    getbyid("chat_messages").innerHTML += "<a class='chataux'>"+"["+data.time+"] "+data.nick+": </a>"+data.text+"<br>";
+    //scroll to the bottom of mesage div on new msg
+    var objDiv = document.getElementById("chat_messages");
+    objDiv.scrollTop = objDiv.scrollHeight;
+}
 
 //If our link indicates that we should be in a room, then connect to it and sync data
 function syncCanvas(room) {

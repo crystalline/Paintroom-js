@@ -171,12 +171,13 @@ io.sockets.on("connection", function (socket) {
     socket.on("event", function(data) {
         var room = Room.rooms[data.room];
         if(room) {
-            room.replayEvent(data);
+            if(data.type != "chat")
+                room.replayEvent(data);
         }
         //io.sockets.in(data.room).emit("event", data);
         socket.broadcast.to(data.room).emit("event", data) //emit to 'room' except this socket
     });
-    
+   
     socket.on("create", function(data) {
         var room = new Room(data.width, data.height);
         
