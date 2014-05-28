@@ -6,6 +6,7 @@ html, body {
 	border: 0;
 	overflow: hidden; /*  Disable scrollbars */
 	display: block;  /* No floating content on sides */
+	font-family: 'DejaVu Serif';
 }
 
 #tools {
@@ -234,3 +235,95 @@ svg.halficon {
     cursor: crosshair;
 }
 
+#chat_window {
+    position: absolute;
+    visibility: hidden;
+    background-color: #ffbb8b;
+    width: 320px;
+    height: 480px;
+    z-index: 20;
+    padding-top: 4px;
+    -moz-border-radius: 4px;
+    border-radius: 4px;
+    font-size: 16px;
+    font-weight: bold;
+}
+
+.chat_bar {
+    box-width: 100%;
+    height: 26px;
+    margin: 4px;
+    margin-top: 0px;
+    text-align: left;
+    /* background-color: #f2ded0; */
+}
+
+#chat_messages {
+    box-width: 100%;
+    height: 416px;
+    margin: 4px;
+    margin-top: 0px;
+    background-color: #fbf1ea;
+    -moz-border-radius: 4px;
+    border-radius: 4px;
+}
+
+.stdinp {
+    /* box-width: auto; */
+    width: 253px;
+    height: 24px;
+    font-size: 16px;
+    font-weight: bold;
+    float: left;
+    text-align: left;
+    -moz-border-radius: 4px;
+    border-radius: 4px;
+    border: none;
+    padding-left: 2px;
+    margin-left: 0px;
+    /* background-color: #f2ded0; */
+}
+
+.chatbutton {
+    height: 26px;
+    width: 52px;
+    float: right;
+    padding-left: 6px;
+    padding-right: 6px;
+    margin: 0px;
+    margin-left: 4px;
+    border:none;
+    background-color: #fa8e41;
+    -moz-border-radius: 4px;
+    border-radius: 4px;
+    font-size: 16px;
+    font-weight: bold;
+}
+
+.closebutton {
+    height: 26px;
+    width: 26px;
+    float: right;
+    padding-left: 6px;
+    padding-right: 6px;
+    margin: 0px;
+    margin-left: 4px;
+    border:none;
+    background-color: #fa8e41;
+    -moz-border-radius: 4px;
+    border-radius: 4px;
+    font-size: 16px;
+    font-weight: bold;
+}
+
+.chatbutton:hover {
+    background-color: #FF6633;
+    box-shadow: 0 0 3px #ff6a00;
+    cursor: pointer; cursor: hand;
+}
+
+.closebutton:hover {
+    background-color: #FF6633;
+    box-shadow: 0 0 3px #ff6a00;
+    cursor: pointer; cursor: hand;
+}

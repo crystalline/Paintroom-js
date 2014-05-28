@@ -11,6 +11,7 @@ function getbyid(id) {
 
 function toggleVis(id) {
     var vis = getbyid(id).style;
+    
     if (!vis.visibility) {
         vis.visibility = "hidden";
     }
@@ -253,9 +254,6 @@ var p2dh = pickerCanvas.height-52;
 var p2dw = pickerCanvas.width-52;
 var cx = p2dw/2, cy = p2dh/2;
 
-                                         //   var x = event.pageX - pickerCanvas.offsetLeft - cx,
-                                         //       y = (p2dh-(event.pageY - (pickerCanvas.offsetTop+mdy)))-cy;
-
 var canvasRect = new Rect(0, 0, p2dw, p2dh);
 canvasRect.click = function(x,y) {
                     var x = x - this.w/2,
@@ -458,10 +456,10 @@ function drawHueSel(hue) {
         x2 = Math.cos(phi2)*(r1-5)+cx,
         y1 = Math.sin(-phi1)*(r1-5)+cy,
         y2 = Math.sin(-phi2)*(r1-5)+cy,
-        x11 = Math.cos(phi1)*(r2+3)+cx,
-        x21 = Math.cos(phi2)*(r2+3)+cx,
-        y11 = Math.sin(-phi1)*(r2+3)+cy,
-        y21 = Math.sin(-phi2)*(r2+3)+cy;
+        x11 = Math.cos(phi1)*(r2+4)+cx,
+        x21 = Math.cos(phi2)*(r2+4)+cx,
+        y11 = Math.sin(-phi1)*(r2+4)+cy,
+        y21 = Math.sin(-phi2)*(r2+4)+cy;
         
         picker2d.beginPath();
         picker2d.moveTo(x1, y1);
@@ -470,7 +468,7 @@ function drawHueSel(hue) {
         picker2d.lineTo(x11, y11);
         picker2d.lineTo(x1, y1);
         picker2d.lineWidth = 2;
-        picker2d.fillStyle = "rgba(230,230,230,100)";
+        picker2d.fillStyle = "white"//"rgba(230,230,230,100)";
         picker2d.fill();
 }
 
@@ -539,7 +537,7 @@ function initSocketCallbacks() {
         } else {
             myRoom = ""
             window.location.hash = ""
-            alert("Cannot join room, looks like th room link has expired");
+            alert("Cannot join room, looks like the room link has expired");
         }
     });
     
@@ -575,13 +573,59 @@ if (myRoom) {
         socket.emit("check", myRoom);
     });
 }
-             
+
 function sendEvent(desc) {
     if (myRoom) {
         desc.room = myRoom;
         socket.emit("event", desc);
     }
 }
+
+
+//Chat window
+/*
+var chatDiv = false;
+
+function createChat() {
+    chatDiv = document.createElement("div");
+    div.style.id = "chat_window";
+    div.innerHTML = "Hello";
+    document.body.addChild(chatDiv);
+}
+*/
+
+var draggingChat = false;
+var dragChatCoords = [0,0];
+var chatDOM = getbyid("chat_window");
+
+function toggleChat() {
+    if (!socket) {
+        alert("Cannot connect to chat while not in room.\nPlease either create a new room or enter existing one.");
+    } else {
+        toggleVis("chat_window");
+    }
+}
+
+//window.addEventListener('mousemove', dragChatWindow, true);
+chatDOM.addEventListener("mousedown", function(ev) {
+    draggingChat = true;
+    var x = ev.pageX - chatDOM.offsetLeft;
+    var y = ev.pageY - chatDOM.offsetTop;
+    dragChatCoords = [x,y];
+    console.log([x,y]);
+}, false);
+
+chatDOM.addEventListener("mouseup", function(ev) {
+    draggingChat = false;
+}, false);
+
+window.addEventListener("mousemove", function(ev) {
+    if (draggingChat) {
+        var div = getbyid("chat_window");
+        div.style.top = (ev.clientY - dragChatCoords[1]) + "px";
+        div.style.left = (ev.clientX - dragChatCoords[0]) + "px";
+    }
+}, false);
 
 //If our link indicates that we should be in a room, then connect to it and sync data
 function syncCanvas(room) {

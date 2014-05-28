@@ -30,6 +30,9 @@
                 <img src='icons/mail4.png' style='padding:2px;'></img>
             </div>
             </a>
+            <div class='button unhighlight' id='chat' onclick='toggleChat()' title='Open chat window'>
+                <img src='icons/chat.png' style='padding:2px;'></img>
+            </div>
         </div>
         <div class='menu' id='pen_menu'>
             <div class='button unhighlight' id='pen_brush' title='Brush'>
@@ -96,6 +99,20 @@
             </div>
             </a>
         </div>
+        
+        <div id='chat_window'>
+            <div class='chat_bar' id='chat_header'>
+            <div style="padding: 2px; float: left; height: 100%;">Chat</div>
+            <input type='button' value='X' class='closebutton' onclick='toggleChat()'></input>
+            </div>
+            <div id='chat_messages'>
+            </div>
+            <div class='chat_bar' id='chat_input'>
+            <input type='text' class='stdinp'></input>
+            <input type='button' value='Send' class='chatbutton'></input>
+            </div>
+        </div>
+        
         <script src='colors.js'></script>
         <script src='socket.io.js'></script>
         <script src='app.js'></script>
