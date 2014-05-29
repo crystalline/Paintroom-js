@@ -33,6 +33,98 @@ function findOffset(obj) {
 	return [curleft,curtop];
 }
 
+//Link transformer
+var autoLink,
+__slice = [].slice;
+
+autoLink = function() {
+var k, linkAttributes, option, options, pattern, v;
+options = 1 <= arguments.length ? __slice.call(arguments, 0) : [];
+
+pattern = /(^|[\s\n]|<br\/?>)((?:https?|ftp):\/\/[\-A-Z0-9+\u0026\u2019@#\/%?=()~_|!:,.;]*[\-A-Z0-9+\u0026@#\/%=~()_|])/gi;
+if (!(options.length > 0)) {
+  return this.replace(pattern, "$1<a href='$2'>$2</a>");
+}
+option = options[0];
+linkAttributes = ((function() {
+  var _results;
+  _results = [];
+  for (k in option) {
+    v = option[k];
+    if (k !== 'callback') {
+      _results.push(" " + k + "='" + v + "'");
+    }
+  }
+  return _results;
+})()).join('');
+return this.replace(pattern, function(match, space, url) {
+  var link;
+  link = (typeof option.callback === "function" ? option.callback(url) : void 0) || ("<a href='" + url + "'" + linkAttributes + ">" + url + "</a>");
+  return "" + space + link;
+});
+};
+
+String.prototype['autoLink'] = autoLink;
+
+//Custom element fading functions, should work in any browser
+function fadeIn( elem, ms ) {
+  if( ! elem )
+    return;
+
+  elem.style.opacity = 0;
+  elem.style.filter = "alpha(opacity=0)";
+  elem.style.display = "inline-block";
+//  elem.style.visibility = "visible";
+  elem.style.visibility = "inherit";
+
+  if( ms ) {
+    var opacity = 0;
+    var timer = setInterval( function() {
+      opacity += 50 / ms;
+      if( opacity >= 1 )
+      {
+        clearInterval(timer);
+        opacity = 1;
+      }
+      elem.style.opacity = opacity;
+      elem.style.filter = "alpha(opacity=" + opacity * 100 + ")";
+    }, 50 );
+  }
+  else {
+    elem.style.opacity = 1;
+    elem.style.filter = "alpha(opacity=1)";
+  }
+}
+
+function fadeOut( elem, ms, callback) {
+  if( ! elem )
+    return;
+
+  if( ms ) {
+    var opacity = 1;
+    var timer = setInterval( function() {
+      opacity -= 50 / ms;
+      if( opacity <= 0 ) {
+        clearInterval(timer);
+        opacity = 0;
+        elem.style.display = "none";
+        elem.style.visibility = "hidden";
+        if (callback) {
+            callback(elem);
+        }
+      }
+      elem.style.opacity = opacity;
+      elem.style.filter = "alpha(opacity=" + opacity * 100 + ")";
+    }, 50 );
+  }
+  else {
+    elem.style.opacity = 0;
+    elem.style.filter = "alpha(opacity=0)";
+    elem.style.display = "none";
+    elem.style.visibility = "hidden";
+  }
+}
+
 function makeid(len) {
     var text = "";
     var possible = "0123456789";
@@ -560,6 +652,7 @@ function initSocketCallbacks() {
             img.onload = function() {
                 ctx.drawImage(img,0,0);
             }
+            syncFinish();
         }
     });
     
@@ -615,11 +708,24 @@ var draggingChat = false;
 var dragChatCoords = [0,0];
 var chatDOM = getbyid("chat_window");
 var nickname = "guest" + makeid(3);
+var loginDone = false;
+
+//Set default login
+getbyid("chat_login").value = nickname;
 
 var chatDraggable = getbyid("chat_header");
 
+function chatLogin() {
+    var nick = getbyid("chat_login").value;
+    if (nick) {
+        nickname = nick;
+        fadeOut(getbyid("login_div"), 500);
+        getbyid("chatinp").focus();
+    }
+}
+
 function toggleChat() {
-    if (false) {
+    if (!socket) {
         alert("Cannot connect to chat while not in room.\nPlease either create a new room or enter existing one.");
     } else {
         toggleVis("chat_window");
@@ -632,11 +738,13 @@ chatDraggable.addEventListener("mousedown", function(ev) {
     var x = ev.pageX - chatDOM.offsetLeft;
     var y = ev.pageY - chatDOM.offsetTop;
     dragChatCoords = [x,y];
-    console.log([x,y]);
+    getbyid("chat_header").style.backgroundColor = "#fa8e41";
+    //console.log([x,y]);
 }, false);
 
 chatDOM.addEventListener("mouseup", function(ev) {
     draggingChat = false;
+    getbyid("chat_header").style.backgroundColor = "rgba(0,0,0,0)";
 }, false);
 
 window.addEventListener("mousemove", function(ev) {
@@ -647,6 +755,31 @@ window.addEventListener("mousemove", function(ev) {
     }
 }, false);
 
+//Chat touch events
+chatDraggable.addEventListener("touchstart", function(ev) {
+                                    ev.preventDefault();
+                                    draggingChat = true;
+                                    var x = ev.touches[0].pageX - chatDOM.offsetLeft;
+                                    var y = ev.touches[0].pageY - chatDOM.offsetTop;
+                                    dragChatCoords = [x,y];
+                                    getbyid("chat_header").style.backgroundColor = "#fa8e41";
+                                }, false);
+                                
+window.addEventListener("touchmove", function(ev) {
+    if (draggingChat) {
+        ev.preventDefault();
+        var div = getbyid("chat_window");
+        div.style.top = (ev.touches[0].pageY - dragChatCoords[1]) + "px";
+        div.style.left = (ev.touches[0].pageX - dragChatCoords[0]) + "px";
+    }
+}, false);
+
+chatDOM.addEventListener("touchend", function(ev) {
+    ev.preventDefault();
+    draggingChat = false;
+    getbyid("chat_header").style.backgroundColor = "rgba(0,0,0,0)";
+}, false);
+
 function format2digit(number) {
     if (number < 10) {
         return "0" + number;
@@ -655,6 +788,8 @@ function format2digit(number) {
     }
 }
 
+var maxMsgLength = 2000;
+
 //Send chat message
 function sendMsg() {
     var msgText = getbyid("chatinp").value;
@@ -662,11 +797,13 @@ function sendMsg() {
     var currentTime = format2digit(d.getHours())+":"+
                       format2digit(d.getMinutes())+":"+
                       format2digit(d.getSeconds());
-    var data = {type: "chat", nick: nickname, text: msgText, time: currentTime};
+    var data = {type: "chat", nick: nickname, text: msgText, time: currentTime, color: toolColor};
     
-    sendEvent(data);
-    getbyid("chatinp").value = "";
-    printMsg(data);
+    if(msgText && msgText.length < maxMsgLength) {
+        sendEvent(data);
+        getbyid("chatinp").value = "";
+        printMsg(data);
+    }
 }
 
 getbyid("chatinp").onkeydown = function(event) {
@@ -675,16 +812,54 @@ getbyid("chatinp").onkeydown = function(event) {
 };
 
 function printMsg(data) {
-    getbyid("chat_messages").innerHTML += "<a class='chataux'>"+"["+data.time+"] "+data.nick+": </a>"+data.text+"<br>";
-    //scroll to the bottom of mesage div on new msg
-    var objDiv = document.getElementById("chat_messages");
+    var div = document.createElement("div");
+    div.style.width = 308;
+    //div.style.visibility = "hidden";
+    div.style.wordBreak = "break-all";
+    div.innerHTML = "["+data.time+"] "+
+                    "<a style='color:"+data.color+";'>"+data.nick+": </a>"+data.text.autoLink()+"<br>";
+    fadeIn(div, 300);
+    var objDiv = getbyid("chat_messages");
+    objDiv.appendChild(div);
     objDiv.scrollTop = objDiv.scrollHeight;
+}
+
+var syncDiv = false;
+
+function syncStart() {
+    if (!syncDiv) {
+        syncDiv = document.createElement("div");
+        syncDiv.style.width = window.innerWidth+"px";
+        syncDiv.style.height = window.innerHeight+"px";
+        syncDiv.style.top = "0px";
+        syncDiv.style.left = "0px";
+        syncDiv.style.position = "fixed";
+        syncDiv.style.backgroundColor = "#222222";
+        syncDiv.style.opacity = 0.9;
+        syncDiv.style.zIndex = "20";
+        syncDiv.style.textAlign = "center";
+        syncDiv.style.paddingTop = (window.innerHeight/2)-32+"px";
+        syncDiv.style.fontSize = "64px";
+        syncDiv.style.color = "#ff6a00";
+        syncDiv.innerHTML = "Syncing...";
+        document.body.appendChild(syncDiv);
+    }
+    return;
+}
+
+function syncFinish() {
+    if (syncDiv) {
+        fadeOut(syncDiv, 200, function (elem) {document.body.removeChild(elem);});
+    }
+    return;
 }
 
 //If our link indicates that we should be in a room, then connect to it and sync data
 function syncCanvas(room) {
-    if (room)
+    if (room) {
+        syncStart();
         socket.emit("sync", {room:room, width:canvas.width, height:canvas.height});
+    }
 }
 
 function createRoom() {
@@ -847,8 +1022,8 @@ canvas.addEventListener("click", onClick, false);
 canvas.addEventListener("touchstart", function(e) {
                                     e.preventDefault();
                                     mouseDown = 1;
-                                    px = event.touches[0].pageX - canvas.offsetLeft,
-                                    py = event.touches[0].pageY - canvas.offsetTop;
+                                    px = e.touches[0].pageX - canvas.offsetLeft,
+                                    py = e.touches[0].pageY - canvas.offsetTop;
                                 }, false);
 canvas.addEventListener("touchmove", onTouchMove, false);
 canvas.addEventListener("touchend", function(e) {e.preventDefault(); mouseDown = 0; px = false; py = false;}, false);

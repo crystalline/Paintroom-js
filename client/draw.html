@@ -1,48 +1,48 @@
 <!doctype html>
-<html>
+<html lang="en">
     <head>
         <title>Blackboard</title>
-        <meta charset='utf-8' />
+        <meta charset='utf-8'>
         <link rel="stylesheet" href="draw.css">
-         <link rel="icon" type="image/png" href="icons/color2.png" />
+        <link rel="icon" type="image/png" href="icons/color2.png">
     </head>
     <body>
         <div id='tools'>
             <div class='button unhighlight' id='pen_b' title='Tools'>
-                <img src='icons/pen.png' style='padding:2px;'></img>
+                <img src='icons/pen.png' alt='pen'>
             </div>
             <div class='button unhighlight' id='color_b' title='Colors'>
-                <img src='icons/color2.png' style='padding:2px;'></img>
+                <img src='icons/color2.png' alt='color'>
             </div>
             <div class='button unhighlight' id='action_b' title='Actions'>
-                <img src='icons/gear2.png' style='padding:2px;'></img>
+                <img src='icons/gear2.png'  alt='action'>
             </div>
             <div class='button unhighlight' id='link_action' onclick='createRoom()' title='Make public. Invite others to draw with you!'>
-                <img src='icons/link3.png' style='padding:2px;'></img>
+                <img src='icons/link3.png' alt='link'>
             </div>
             <a href='https://github.com/crystalline/Paintroom-js'>
             <div class='shadow-icon unhighlight' id='github' title='Fork me on github!'>
-                <img src='icons/octocat.png' style='padding:2px;'></img>
+                <img src='icons/octocat.png' alt='github'>
             </div>
             </a>
             <a href='mailto:crystalline.emerald@gmail.com'>
             <div class='shadow-icon unhighlight' id='mail' title='Email author'>
-                <img src='icons/mail4.png' style='padding:2px;'></img>
+                <img src='icons/mail4.png' alt='email'>
             </div>
             </a>
             <div class='button unhighlight' id='chat' onclick='toggleChat()' title='Open chat window'>
-                <img src='icons/chat.png' style='padding:2px;'></img>
+                <img src='icons/chat.png' alt='chat'>
             </div>
         </div>
         <div class='menu' id='pen_menu'>
             <div class='button unhighlight' id='pen_brush' title='Brush'>
-                <img src='icons/brush2.png' style='padding:2px;' onclick='setTool("brush")'></img>
+                <img src='icons/brush2.png' onclick='setTool("brush")' alt='brush'>
             </div>
             <div class='button unhighlight' id='pen_eraser' title='Eraser'>
-                <img src='icons/eraser2.png' style='padding:2px;' onclick='setTool("eraser")'></img>
+                <img src='icons/eraser2.png' onclick='setTool("eraser")' alt='eraser'>
             </div>
             <div class='button unhighlight' id='pen_picker' title='Picker'>
-                <img src='icons/color_picker2.png' style='padding:2px;' onclick='setTool("picker")'></img>
+                <img src='icons/color_picker2.png' onclick='setTool("picker")' alt='picker'>
             </div>
             <div class='halfbutton unhighlight' id='size1' onclick='setSize(2)'>
             <svg xmlns="http://www.w3.org/2000/svg" class='halficon'>
@@ -74,45 +74,46 @@
             <div class='quarterbutton unhighlight' id='sizeinc' onclick='incSize()' title='Increase size'>
             +
             </div>
-            <!-- <div class='halfhoriz'> -->
-                <!-- <form><input type='text'></input></form> -->
-                <input type='text' id='sizeinp' value='4'
-                 onchange='setSize(parseInt(this.value,10))'></input>
-            <!-- </div> -->
+            <input type='text' id='sizeinp' value='4' onchange='setSize(parseInt(this.value,10))'>
         </div>
         <div class='menu' id='color_menu'>
-            <canvas id='color_picker' width='212px' height='212px'></canvas>
+            <canvas id='color_picker' width='212' height='212'>Sorry, your browser doesn't support HTML5 canvas</canvas>
         </div>
         <div class='menu' id='action_menu'>
             <div class='button unhighlight' id='clear_action' onclick='clearScreen()' title='Clear canvas'>
-                <img src='icons/cross.png' style='padding:2px;'></img>
+                <img src='icons/cross.png' alt='clear screen'>
             </div>
             <div class='button unhighlight' id='save_action' onclick='saveScreen()' title='Save image to disk'>
-                <img src='icons/download2.png' style='padding:2px;'></img>
+                <img src='icons/download2.png' alt='download'>
             </div>
             <div class='button unhighlight' id='link_resync' onclick='syncCanvas(myRoom)' title='Resync canvas with server'>
-                <img src='icons/refresh.png' style='padding:2px;'></img>
+                <img src='icons/refresh.png' alt='resync'>
             </div>
             <a href='http://paint.neon.org'>
             <div class='button unhighlight' id='exit' title='Leave'>
-                <img src='icons/exit.png' style='padding:2px;'></img>
+                <img src='icons/exit.png' alt='exit'>
             </div>
             </a>
         </div>
         
         <div id='chat_window'>
+            <div id='login_div'>
+                <div id='login_form'>
+                    <div>Enter your login</div>
+                    <div><input type='text' id='chat_login'></div>
+                    <div><input type='button' id='login_button' value='Enter' onclick='chatLogin()'></div>
+                </div>
+            </div>
             <div class='chat_bar' id='chat_header'>
-            <div style="padding: 2px; float: left; height: 100%;">Chat</div>
-            <input type='button' value='X' class='closebutton' onclick='toggleChat()'></input>
+                <div style="padding: 2px; float: left; height: 100%;">Chat</div>
+                <input type='button' value='X' class='closebutton' onclick='toggleChat()'>
             </div>
-            <div id='chat_messages'>
-            </div>
+            <div id='chat_messages'></div>
             <div class='chat_bar' id='chat_input'>
-            <input type='text' id='chatinp'></input>
-            <input type='button' value='Send' class='chatbutton' onclick='sendMsg()'></input>
+                <input type='text' id='chatinp'>
+                <input type='button' value='Send' class='chatbutton' onclick='sendMsg()'>
             </div>
         </div>
-        
         <script src='colors.js'></script>
         <script src='socket.io.js'></script>
         <script src='app.js'></script>
