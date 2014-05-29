@@ -153,6 +153,10 @@ svg.halficon {
     user-select: none;
 }
 
+.shadow-icon > img {
+    padding: 2px;
+}
+
 .shadow-icon:hover {
     cursor: pointer; cursor: hand;
     /* background-color: #ffbb8b; */
