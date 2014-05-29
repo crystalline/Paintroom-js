@@ -816,8 +816,9 @@ function printMsg(data) {
     div.style.width = 308;
     //div.style.visibility = "hidden";
     div.style.wordBreak = "break-all";
+    div.style.width = "100%";
     div.innerHTML = "["+data.time+"] "+
-                    "<a style='color:"+data.color+";'>"+data.nick+": </a>"+data.text.autoLink()+"<br>";
+                    "<a style='color:"+data.color+";'>"+data.nick+": </a>"+data.text.autoLink();
     fadeIn(div, 300);
     var objDiv = getbyid("chat_messages");
     objDiv.appendChild(div);
